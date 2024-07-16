@@ -27,7 +27,7 @@ export const Footer: React.FC<Props> = ({
       <nav className="filter" data-cy="Filter">
         <a
           href="#/"
-          className={cn('filter__link', { selected: status === '' })}
+          className={cn('filter__link', { selected: !status })}
           data-cy="FilterLinkAll"
           onClick={() => onClick('')}
         >
@@ -36,7 +36,7 @@ export const Footer: React.FC<Props> = ({
         <a
           href="#/active"
           className={cn('filter__link', {
-            selected: status === TodoStatus.Active,
+            selected: status === 'active',
           })}
           data-cy="FilterLinkActive"
           onClick={() => onClick(TodoStatus.Active)}
@@ -46,7 +46,7 @@ export const Footer: React.FC<Props> = ({
         <a
           href="#/completed"
           className={cn('filter__link', {
-            selected: status === TodoStatus.Completed,
+            selected: status === 'completed',
           })}
           data-cy="FilterLinkCompleted"
           onClick={() => onClick(TodoStatus.Completed)}
@@ -59,7 +59,7 @@ export const Footer: React.FC<Props> = ({
         type="button"
         className="todoapp__clear-completed"
         data-cy="ClearCompletedButton"
-        disabled={completedItems.length === 0}
+        disabled={!completedItems.length}
         onClick={onDelete}
       >
         Clear completed
