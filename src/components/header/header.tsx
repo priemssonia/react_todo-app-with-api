@@ -31,9 +31,7 @@ export const Header: React.FC<Props> = ({
   const titleField = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (titleField.current) {
-      titleField.current.focus();
-    }
+    titleField.current?.focus();
   }, [onReset]);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {

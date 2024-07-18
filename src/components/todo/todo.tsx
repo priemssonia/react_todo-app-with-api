@@ -3,7 +3,7 @@ import { Todo } from '../../types/Todo';
 import { ChangeEvent, useEffect, useRef, useState } from 'react';
 
 type Props = {
-  list: Todo[];
+  todos: Todo[];
   todo: Todo;
   idTodo: number;
   onDelete: (id: number) => Promise<void>;
@@ -14,7 +14,7 @@ type Props = {
 };
 
 export const ToDo: React.FC<Props> = ({
-  list,
+  todos,
   todo,
   idTodo,
   onDelete,
@@ -38,7 +38,7 @@ export const ToDo: React.FC<Props> = ({
     onError('');
     onIdTodo(id);
 
-    if (updateTodo === null) {
+    if (!updateTodo) {
       setIsSubmitting(false);
 
       return;
@@ -57,7 +57,7 @@ export const ToDo: React.FC<Props> = ({
         });
     } else {
       onIdTodo(0);
-      const todoActual = list.find(item => item.id === updateTodo.id);
+      const todoActual = todos.find(item => item.id === updateTodo.id);
 
       if (todoActual && updateTodo.title === todoActual.title) {
         setUpdateTodo(null);
@@ -117,7 +117,7 @@ export const ToDo: React.FC<Props> = ({
   const handleChangeTitle = (event: ChangeEvent<HTMLInputElement>) => {
     if (updateTodo) {
       setUpdateTodo(currentTodo => {
-        if (currentTodo === null) {
+        if (!currentTodo) {
           return null;
         }
 

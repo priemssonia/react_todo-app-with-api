@@ -1,8 +1,8 @@
 import { Todo } from '../../types/Todo';
-import { ToDo } from '../todo/todo';
+import { ToDo } from '../todo/ToDo';
 
 type Props = {
-  list: Todo[];
+  todos: Todo[];
   idTodo: number;
   onDelete: (id: number) => Promise<void>;
   onUpdate: (todo: Todo) => Promise<void>;
@@ -12,7 +12,7 @@ type Props = {
 };
 
 export const ToDoList: React.FC<Props> = ({
-  list,
+  todos,
   idTodo,
   onDelete,
   onUpdate,
@@ -22,9 +22,9 @@ export const ToDoList: React.FC<Props> = ({
 }) => {
   return (
     <section className="todoapp__main" data-cy="TodoList">
-      {list.map(todo => (
+      {todos.map(todo => (
         <ToDo
-          list={list}
+          todos={todos}
           todo={todo}
           key={todo.id}
           idTodo={idTodo}

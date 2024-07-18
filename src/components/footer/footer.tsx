@@ -3,33 +3,34 @@ import { Todo } from '../../types/Todo';
 import { TodoStatus } from '../../types/TodoStatus';
 
 type Props = {
-  onClick: (status: string) => void;
+  onClick: (status: TodoStatus) => void;
   status: string;
-  leftItems: number;
-  completedItems: Todo[];
+  activeTodos: number;
+  completedTodos: Todo[];
   onDelete: () => void;
 };
 
 export const Footer: React.FC<Props> = ({
   onClick,
   status,
-  leftItems,
-  completedItems,
+  activeTodos,
+  completedTodos,
   onDelete,
 }) => {
   return (
     <footer className="todoapp__footer" data-cy="Footer">
       <span className="todo-count" data-cy="TodosCounter">
-        {leftItems + ' items left'}
+        {activeTodos + ' items left'}
       </span>
 
-      {/* Active link should have the 'selected' class */}
       <nav className="filter" data-cy="Filter">
         <a
           href="#/"
-          className={cn('filter__link', { selected: !status })}
+          className={cn('filter__link', {
+            selected: status === TodoStatus.All,
+          })}
           data-cy="FilterLinkAll"
-          onClick={() => onClick('')}
+          onClick={() => onClick(TodoStatus.All)}
         >
           All
         </a>
@@ -54,12 +55,12 @@ export const Footer: React.FC<Props> = ({
           Completed
         </a>
       </nav>
-      {/* this button should be disabled if there are no completed todos */}
+
       <button
         type="button"
         className="todoapp__clear-completed"
         data-cy="ClearCompletedButton"
-        disabled={!completedItems.length}
+        disabled={!completedTodos.length}
         onClick={onDelete}
       >
         Clear completed
