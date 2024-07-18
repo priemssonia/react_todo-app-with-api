@@ -3,10 +3,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { UserWarning } from './UserWarning';
 import * as postService from './api/todos';
-import { Errors } from './components/errors/Errors';
-import { Footer } from './components/footer/Footer';
-import { ToDoList } from './components/todoList/TodoList';
-import { Header } from './components/header/Header';
+import { Errors } from './components/Errors/Errors';
+import { Footer } from './components/Footer/Footer';
+import { ToDoList } from './components/TodoList/TodoList';
+import { Header } from './components/Header/Header';
 import { Todo } from './types/Todo';
 import { TodoStatus } from './types/TodoStatus';
 import { filterTodos } from './utils/filterTodos';
