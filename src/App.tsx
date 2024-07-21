@@ -10,13 +10,7 @@ import { Header } from './components/Header';
 import { Todo } from './types/Todo';
 import { TodoStatus } from './types/TodoStatus';
 import { filterTodos } from './utils/filterTodos';
-
-enum ErrorMessages {
-  UNABLE_TO_LOAD_TODOS = 'Unable to load todos',
-  UNABLE_TO_DELETE_TODO = 'Unable to delete a todo',
-  UNABLE_TO_ADD_TODO = 'Unable to add a todo',
-  UNABLE_TO_UPDATE_TODO = 'Unable to update a todo',
-}
+import { ErrorMessages } from './types/ErrorsMessages';
 
 const initialTodo = {
   userId: postService.USER_ID,
@@ -106,7 +100,7 @@ export const App: React.FC = () => {
       .createTodo(trimmedTodo)
       .then(todo => {
         setTodosFromServer(currentTodos => [
-          ...currentTodos.filter(t => t.id !== 0),
+          ...currentTodos.filter(currentTodo => currentTodo.id),
           todo,
         ]);
       })
@@ -153,34 +147,38 @@ export const App: React.FC = () => {
 
   const toggleAll = async () => {
     setLoading(true);
-    let todosFilter = todos;
+    let todosToToggle = todosFromServer;
 
-    if (activeTodos.length) {
-      todosFilter = activeTodos;
+    if (activeTodos.length > 0) {
+      todosToToggle = activeTodos;
     }
 
-    todosFilter.map(async item => {
-      const updateCompletedTodo = {
-        ...item,
-        completed: !item.completed,
+    const togglePromises = todosToToggle.map(async todo => {
+      const updatedTodo = {
+        ...todo,
+        completed: !todo.completed,
       };
 
-      await postService
-        .updateTodo(updateCompletedTodo)
-        .then(todo => {
-          setTodosFromServer(currentTodos => {
-            const newTodos = [...currentTodos];
-            const index = newTodos.findIndex(newUpdateTodo => {
-              return newUpdateTodo.id === updateCompletedTodo.id;
-            });
-
-            newTodos.splice(index, 1, todo);
-
-            return newTodos;
-          });
-        })
-        .finally(() => setLoading(false));
+      return postService.updateTodo(updatedTodo);
     });
+
+    try {
+      const updatedTodos = await Promise.all(togglePromises);
+
+      setTodosFromServer(currentTodos => {
+        return currentTodos.map(todo => {
+          const updatedTodo = updatedTodos.find(
+            update => update.id === todo.id,
+          );
+
+          return updatedTodo || todo;
+        });
+      });
+    } catch (error) {
+      setErrorMessage(ErrorMessages.UNABLE_TO_UPDATE_TODO);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!postService.USER_ID) {

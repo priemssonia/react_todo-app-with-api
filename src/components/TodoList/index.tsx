@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Todo } from '../../types/Todo';
-import { ToDo } from '../ToDo';
+import { Todos } from '../Todos';
 
 type Props = {
   todos: Todo[];
@@ -20,10 +21,49 @@ export const ToDoList: React.FC<Props> = ({
   onError,
   onIdTodo,
 }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (updateTodo: Todo | null) => {
+    setIsSubmitting(true);
+    onError('');
+    if (updateTodo) {
+      onIdTodo(updateTodo.id);
+
+      if (!updateTodo.title.trim()) {
+        onDelete(updateTodo.id)
+          .then(() => {
+            setIsSubmitting(false);
+            onIdTodo(0);
+          })
+          .finally(() => {
+            onLoading(false);
+          });
+      } else {
+        const todoActual = todos.find(item => item.id === updateTodo.id);
+
+        if (todoActual && updateTodo.title === todoActual.title) {
+          setIsSubmitting(false);
+
+          return;
+        }
+
+        onLoading(true);
+        onUpdate({ ...updateTodo, title: updateTodo.title.trim() })
+          .then(() => {
+            setIsSubmitting(false);
+            onIdTodo(0);
+          })
+          .finally(() => {
+            onLoading(false);
+          });
+      }
+    }
+  };
+
   return (
     <section className="todoapp__main" data-cy="TodoList">
       {todos.map(todo => (
-        <ToDo
+        <Todos
           todos={todos}
           todo={todo}
           key={todo.id}
@@ -33,6 +73,8 @@ export const ToDoList: React.FC<Props> = ({
           onLoading={onLoading}
           onError={onError}
           onIdTodo={onIdTodo}
+          isSubmitting={isSubmitting}
+          onSubmit={handleSubmit}
         />
       ))}
     </section>

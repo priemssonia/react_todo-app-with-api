@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useRef } from 'react';
 import { Todo } from '../../types/Todo';
 import cn from 'classnames';
+import { ErrorMessages } from '../../types/ErrorsMessages';
 
 type Props = {
   todo: Omit<Todo, 'id'>;
@@ -20,7 +21,7 @@ export const Header: React.FC<Props> = ({
   todo,
   loading,
   todos,
-  todosFromServer,
+  leftTodos,
   onSubmit,
   onChange,
   onReset,
@@ -34,37 +35,40 @@ export const Header: React.FC<Props> = ({
     titleField.current?.focus();
   }, [onReset]);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     onError('');
     event.preventDefault();
 
     if (!todo.title.trim()) {
-      onError('Title should not be empty');
+      onError(ErrorMessages.TITLE_SHOULD_NOT_BE_EMPTY);
 
       return;
     }
 
     onLoading(true);
-    onSubmit(todo)
-      .then(onReset)
-      .finally(() => onLoading(false));
+    try {
+      await onSubmit(todo);
+      onReset();
+    } catch {
+      onError(ErrorMessages.UNABLE_TO_ADD_TODO);
+    } finally {
+      onLoading(false);
+    }
   };
 
   return (
     <header className="todoapp__header">
-      {/* this button should have `active` class only if all todos are completed */}
-      {todosFromServer.length > 0 && (
+      {todos.length > 0 && (
         <button
           type="button"
           className={cn('todoapp__toggle-all', {
-            active: todos.every(item => item.completed),
+            active: todos.length > 0 && leftTodos.length === 0,
           })}
           data-cy="ToggleAllButton"
           onClick={toggleAll}
         />
       )}
 
-      {/* Add a todo on form submit */}
       <form onSubmit={handleSubmit}>
         <input
           value={todo.title}
@@ -74,7 +78,7 @@ export const Header: React.FC<Props> = ({
           className="todoapp__new-todo"
           placeholder="What needs to be done?"
           onChange={event => onChange(event.target.value)}
-          disabled={loading ? true : false}
+          disabled={loading}
         />
       </form>
     </header>

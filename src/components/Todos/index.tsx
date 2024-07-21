@@ -11,21 +11,22 @@ type Props = {
   onLoading: (status: boolean) => void;
   onError: (status: string) => void;
   onIdTodo: (id: number) => void;
+  isSubmitting: boolean;
+  onSubmit: (updateTodo: Todo | null) => void;
 };
 
-export const ToDo: React.FC<Props> = ({
-  todos,
+export const Todos: React.FC<Props> = ({
   todo,
   idTodo,
   onDelete,
   onUpdate,
   onLoading,
-  onError,
   onIdTodo,
+  isSubmitting,
+  onSubmit,
 }) => {
   const { title, userId, id, completed } = todo;
   const [updateTodo, setUpdateTodo] = useState<Todo | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const titleField = useRef<HTMLInputElement | null>(null);
 
@@ -33,63 +34,12 @@ export const ToDo: React.FC<Props> = ({
     titleField.current?.focus();
   });
 
-  const handleSubmit = async () => {
-    setIsSubmitting(true);
-    onError('');
-    onIdTodo(id);
-
-    if (!updateTodo) {
-      setIsSubmitting(false);
-
-      return;
-    }
-
-    if (!updateTodo.title.trim()) {
-      onIdTodo(updateTodo.id);
-      onDelete(updateTodo.id)
-        .then(() => {
-          setUpdateTodo(null);
-          onIdTodo(updateTodo.id);
-        })
-        .finally(() => {
-          onLoading(false);
-          onIdTodo(0);
-        });
-    } else {
-      onIdTodo(0);
-      const todoActual = todos.find(item => item.id === updateTodo.id);
-
-      if (todoActual && updateTodo.title === todoActual.title) {
-        setUpdateTodo(null);
-        setIsSubmitting(false);
-
-        return;
-      }
-
-      onIdTodo(updateTodo.id);
-      onLoading(true);
-      onUpdate({ ...updateTodo, title: updateTodo.title.trim() })
-        .then(() => {
-          setUpdateTodo(null);
-          onIdTodo(updateTodo.id);
-        })
-        .finally(() => {
-          onLoading(false);
-          onIdTodo(0);
-        });
-    }
-
-    setTimeout(() => {
-      setIsSubmitting(false);
-    }, 1000);
-  };
-
-  const handleChecked = (post: Todo) => {
+  const handleChecked = (event: ChangeEvent<HTMLInputElement>) => {
     onLoading(true);
-    onIdTodo(post.id);
+    onIdTodo(id);
     const updateCompletedTodo = {
       ...todo,
-      completed: !post.completed,
+      completed: event.target.checked,
     };
 
     onUpdate(updateCompletedTodo)
@@ -107,10 +57,8 @@ export const ToDo: React.FC<Props> = ({
       return;
     }
 
-    if (event.key === 'Enter') {
-      if (!isSubmitting) {
-        handleSubmit();
-      }
+    if (event.key === 'Enter' && !isSubmitting) {
+      onSubmit(updateTodo);
     }
   };
 
@@ -131,7 +79,7 @@ export const ToDo: React.FC<Props> = ({
 
   const handleBlur = () => {
     if (!isSubmitting) {
-      handleSubmit();
+      onSubmit(updateTodo);
     }
 
     return;
@@ -140,14 +88,14 @@ export const ToDo: React.FC<Props> = ({
   return (
     <div data-cy="Todo" className={`todo ${completed && 'completed'}`} key={id}>
       {/* eslint-disable jsx-a11y/label-has-associated-control  */}
-      <label className="todo__status-label" htmlFor={'' + id}>
+      <label className="todo__status-label" htmlFor={`${id}`}>
         <input
-          id={'' + id}
+          id={`${id}`}
           data-cy="TodoStatus"
           type="checkbox"
           className="todo__status"
           checked={completed}
-          onClick={() => handleChecked({ title, id, userId, completed })}
+          onChange={handleChecked}
         />
       </label>
 
@@ -180,7 +128,6 @@ export const ToDo: React.FC<Props> = ({
           >
             {title}
           </span>
-          {/* Remove button appears only on hover */}
           <button
             type="button"
             className="todo__remove"
@@ -195,7 +142,6 @@ export const ToDo: React.FC<Props> = ({
         </>
       )}
 
-      {/* overlay will cover the todo while it is being deleted or updated */}
       <div
         data-cy="TodoLoader"
         className={cn('modal overlay', {
