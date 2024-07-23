@@ -193,9 +193,9 @@ export const App: React.FC = () => {
         <Header
           loading={loading}
           todo={newTodo}
+          todosFromServer={todosFromServer}
           todos={todos}
           leftTodos={activeTodos}
-          todosFromServer={todosFromServer}
           onSubmit={onCreateTodo}
           onChange={handleChangeTitle}
           onReset={reset}

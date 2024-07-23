@@ -31,8 +31,10 @@ export const Todos: React.FC<Props> = ({
   const titleField = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    titleField.current?.focus();
-  });
+    if (updateTodo) {
+      titleField.current?.focus();
+    }
+  }, [updateTodo]);
 
   const handleChecked = (event: ChangeEvent<HTMLInputElement>) => {
     onLoading(true);
@@ -53,6 +55,7 @@ export const Todos: React.FC<Props> = ({
   const handleKeyUp = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Escape') {
       setUpdateTodo(null);
+      onIdTodo(0);
 
       return;
     }
@@ -63,26 +66,24 @@ export const Todos: React.FC<Props> = ({
   };
 
   const handleChangeTitle = (event: ChangeEvent<HTMLInputElement>) => {
-    if (updateTodo) {
-      setUpdateTodo(currentTodo => {
-        if (!currentTodo) {
-          return null;
-        }
+    setUpdateTodo(currentTodo => {
+      if (!currentTodo) {
+        return null;
+      }
 
-        return {
-          ...currentTodo,
-          title: event.target.value,
-        };
-      });
-    }
+      return {
+        ...currentTodo,
+        title: event.target.value,
+      };
+    });
   };
 
   const handleBlur = () => {
     if (!isSubmitting) {
       onSubmit(updateTodo);
+      setUpdateTodo(null);
+      onIdTodo(0);
     }
-
-    return;
   };
 
   return (
@@ -124,6 +125,7 @@ export const Todos: React.FC<Props> = ({
             className="todo__title"
             onDoubleClick={() => {
               setUpdateTodo({ title, id, userId, completed });
+              onIdTodo(id);
             }}
           >
             {title}

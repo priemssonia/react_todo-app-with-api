@@ -4,10 +4,10 @@ import cn from 'classnames';
 import { ErrorMessages } from '../../types/ErrorsMessages';
 
 type Props = {
+  todosFromServer: Todo[];
   todo: Omit<Todo, 'id'>;
   loading: boolean;
   todos: Todo[];
-  todosFromServer: Todo[];
   leftTodos: Todo[];
   onSubmit: (todo: Omit<Todo, 'id'>) => Promise<void>;
   onChange: (value: string) => void;
@@ -22,6 +22,7 @@ export const Header: React.FC<Props> = ({
   loading,
   todos,
   leftTodos,
+  todosFromServer,
   onSubmit,
   onChange,
   onReset,
@@ -58,7 +59,7 @@ export const Header: React.FC<Props> = ({
 
   return (
     <header className="todoapp__header">
-      {todos.length > 0 && (
+      {todosFromServer.length > 0 && (
         <button
           type="button"
           className={cn('todoapp__toggle-all', {
