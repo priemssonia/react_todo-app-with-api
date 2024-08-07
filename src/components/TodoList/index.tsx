@@ -26,37 +26,38 @@ export const ToDoList: React.FC<Props> = ({
   const handleSubmit = async (updateTodo: Todo | null) => {
     setIsSubmitting(true);
     onError('');
+    onLoading(true);
     if (updateTodo) {
       onIdTodo(updateTodo.id);
 
       if (!updateTodo.title.trim()) {
-        onDelete(updateTodo.id)
-          .then(() => {
-            setIsSubmitting(false);
-            onIdTodo(0);
-          })
-          .finally(() => {
-            onLoading(false);
-          });
+        try {
+          await onDelete(updateTodo.id);
+        } finally {
+          setIsSubmitting(false);
+          onIdTodo(0);
+          onLoading(false);
+        }
       } else {
         const todoActual = todos.find(item => item.id === updateTodo.id);
 
         if (todoActual && updateTodo.title === todoActual.title) {
           setIsSubmitting(false);
+          onLoading(false);
 
           return;
         }
 
-        onLoading(true);
-        onUpdate({ ...updateTodo, title: updateTodo.title.trim() })
-          .then(() => {
-            setIsSubmitting(false);
-            onIdTodo(0);
-          })
-          .finally(() => {
-            onLoading(false);
-          });
+        try {
+          await onUpdate({ ...updateTodo, title: updateTodo.title.trim() });
+        } finally {
+          setIsSubmitting(false);
+          onIdTodo(0);
+          onLoading(false);
+        }
       }
+    } else {
+      onLoading(false);
     }
   };
 
