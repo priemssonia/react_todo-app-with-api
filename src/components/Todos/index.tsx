@@ -195,7 +195,7 @@ export const Todos: React.FC<Props> = ({
       <div
         data-cy="TodoLoader"
         className={cn('modal overlay', {
-          'is-active': id === idTodo && !updateTodo,
+          'is-active': id === idTodo && (isSubmitting || !updateTodo),
         })}
       >
         <div className="modal-background has-background-white-ter" />
