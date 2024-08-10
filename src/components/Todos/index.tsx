@@ -29,7 +29,6 @@ export const Todos: React.FC<Props> = ({
 }) => {
   const { title, userId, id, completed } = todo;
   const [updateTodo, setUpdateTodo] = useState<Todo | null>(null);
-
   const titleField = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -38,9 +37,35 @@ export const Todos: React.FC<Props> = ({
     }
   }, [updateTodo]);
 
+  const resetState = () => {
+    setUpdateTodo(null);
+    onIdTodo(0);
+    onLoading(false);
+  };
+
+  const handleError = (errorType: string) => {
+    onError(errorType);
+    resetState();
+  };
+
+  const handleDoubleClick = () => {
+    setUpdateTodo({ title, id, userId, completed });
+    onIdTodo(id);
+  };
+
+  const handleDelete = () => {
+    onIdTodo(id);
+    onDelete(id);
+  };
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
+    event.preventDefault();
+  };
+
   const handleChecked = async (event: ChangeEvent<HTMLInputElement>) => {
     onLoading(true);
     onIdTodo(id);
+
     const updateCompletedTodo = {
       ...todo,
       completed: event.target.checked,
@@ -48,46 +73,36 @@ export const Todos: React.FC<Props> = ({
 
     try {
       await onUpdate(updateCompletedTodo);
-      setUpdateTodo(null);
+      resetState();
     } catch (error) {
-      onError(ErrorMessages.UNABLE_TO_UPDATE_TODO);
-    } finally {
-      onLoading(false);
-      onIdTodo(0);
+      handleError(ErrorMessages.UNABLE_TO_UPDATE_TODO);
     }
   };
 
   const handleKeyUp = async (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Escape') {
-      setUpdateTodo(null);
-      onIdTodo(0);
-      onLoading(false);
+      resetState();
 
       return;
     }
 
     if (event.key === 'Enter' && !isSubmitting) {
       onLoading(true);
-      if (updateTodo?.title.trim() === '') {
-        try {
+
+      try {
+        if (!updateTodo?.title.trim()) {
           await onDelete(id);
-          setUpdateTodo(null);
-          onIdTodo(0);
-        } catch (error) {
-          onError(ErrorMessages.UNABLE_TO_DELETE_TODO);
-        } finally {
-          onLoading(false);
-        }
-      } else {
-        try {
+        } else {
           await onSubmit(updateTodo);
-          setUpdateTodo(null);
-          onIdTodo(0);
-        } catch (error) {
-          onError(ErrorMessages.UNABLE_TO_UPDATE_TODO);
-        } finally {
-          onLoading(false);
         }
+
+        resetState();
+      } catch (error) {
+        handleError(
+          !updateTodo?.title.trim()
+            ? ErrorMessages.UNABLE_TO_DELETE_TODO
+            : ErrorMessages.UNABLE_TO_UPDATE_TODO,
+        );
       }
     }
   };
@@ -106,29 +121,26 @@ export const Todos: React.FC<Props> = ({
   };
 
   const handleBlur = async () => {
-    if (!isSubmitting) {
-      onLoading(true);
-      if (updateTodo?.title.trim() === '') {
-        try {
-          await onDelete(id);
-          setUpdateTodo(null);
-          onIdTodo(0);
-        } catch (error) {
-          onError(ErrorMessages.UNABLE_TO_DELETE_TODO);
-        } finally {
-          onLoading(false);
-        }
+    if (isSubmitting) {
+      return;
+    }
+
+    onLoading(true);
+
+    try {
+      if (!updateTodo?.title.trim()) {
+        await onDelete(id);
       } else {
-        try {
-          await onSubmit(updateTodo);
-          setUpdateTodo(null);
-          onIdTodo(0);
-        } catch (error) {
-          onError(ErrorMessages.UNABLE_TO_UPDATE_TODO);
-        } finally {
-          onLoading(false);
-        }
+        await onSubmit(updateTodo);
       }
+
+      resetState();
+    } catch (error) {
+      handleError(
+        !updateTodo?.title.trim()
+          ? ErrorMessages.UNABLE_TO_DELETE_TODO
+          : ErrorMessages.UNABLE_TO_UPDATE_TODO,
+      );
     }
   };
 
@@ -147,11 +159,7 @@ export const Todos: React.FC<Props> = ({
       </label>
 
       {updateTodo ? (
-        <form
-          onSubmit={(event: React.FormEvent<HTMLFormElement>): void => {
-            event.preventDefault();
-          }}
-        >
+        <form onSubmit={handleSubmit}>
           <input
             value={updateTodo?.title}
             ref={titleField}
@@ -159,7 +167,7 @@ export const Todos: React.FC<Props> = ({
             type="text"
             className="todo__title-field"
             placeholder="Empty todo will be deleted"
-            onChange={event => handleChangeTitle(event)}
+            onChange={handleChangeTitle}
             onBlur={handleBlur}
             onKeyUp={handleKeyUp}
           />
@@ -169,10 +177,7 @@ export const Todos: React.FC<Props> = ({
           <span
             data-cy="TodoTitle"
             className="todo__title"
-            onDoubleClick={() => {
-              setUpdateTodo({ title, id, userId, completed });
-              onIdTodo(id);
-            }}
+            onDoubleClick={handleDoubleClick}
           >
             {title}
           </span>
@@ -180,10 +185,7 @@ export const Todos: React.FC<Props> = ({
             type="button"
             className="todo__remove"
             data-cy="TodoDelete"
-            onClick={() => {
-              onIdTodo(id);
-              onDelete(id);
-            }}
+            onClick={handleDelete}
           >
             ×
           </button>
@@ -193,7 +195,7 @@ export const Todos: React.FC<Props> = ({
       <div
         data-cy="TodoLoader"
         className={cn('modal overlay', {
-          'is-active': id === idTodo,
+          'is-active': id === idTodo && !updateTodo,
         })}
       >
         <div className="modal-background has-background-white-ter" />
